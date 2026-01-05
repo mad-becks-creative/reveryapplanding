@@ -27,9 +27,10 @@
     }
 
     body {
+      position: relative;
       margin: 0;
       height: 100vh;
-      background: var(--glow), var(--bg);
+      background: var(--bg);
       color: var(--fg);
       font-family: "Poppins", -apple-system, BlinkMacSystemFont,
                    system-ui, sans-serif;
@@ -39,12 +40,32 @@
       justify-content: center;
     }
 
+    body::before {
+      content: "";
+      position: absolute;
+      inset: -10%;
+      background: var(--glow);
+      z-index: 0;
+      pointer-events: none;
+      transform-origin: center;
+      will-change: transform, opacity;
+      transform: translate3d(0, 0, 0);
+      animation: glowPulse 26s ease-in-out infinite;
+    }
+
+    body > * {
+      position: relative;
+      z-index: 1;
+    }
+
     h1 {
       font-size: 4rem;
       font-weight: 500;
       letter-spacing: -0.02em;
       margin: 0;
       text-align: center;
+      opacity: 0;
+      animation: fadeUp 1.4s ease-out forwards;
     }
 
     .tagline {
@@ -54,6 +75,34 @@
       letter-spacing: 0.18em;
       text-transform: lowercase;
       text-align: center;
+      opacity: 0;
+      animation: fadeUp 1.4s ease-out forwards;
+      animation-delay: 0.4s;
+    }
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes glowPulse {
+      0% {
+        opacity: 0.85;
+        transform: translate3d(0, 0, 0);
+      }
+      50% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+      100% {
+        opacity: 0.85;
+        transform: translate3d(0, 0, 0);
+      }
     }
 
     footer {
