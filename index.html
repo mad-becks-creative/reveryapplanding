@@ -26,10 +26,15 @@
       box-sizing: border-box;
     }
 
+    html {
+      height: 100%;
+      overflow-x: hidden;
+    }
+
     body {
       position: relative;
       margin: 0;
-      height: 100vh;
+      min-height: 100vh;
       background: var(--bg);
       color: var(--fg);
       font-family: "Poppins", -apple-system, BlinkMacSystemFont,
@@ -38,6 +43,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      overflow-x: hidden;
+      padding: 0 24px;
     }
 
     body::before {
@@ -56,6 +63,12 @@
     body > * {
       position: relative;
       z-index: 1;
+    }
+
+    main {
+      width: min(640px, 100%);
+      margin: 0 auto;
+      text-align: center;
     }
 
     h1 {
@@ -112,6 +125,27 @@
       letter-spacing: 0.32em;
       text-transform: uppercase;
       color: rgba(242, 242, 242, 0.35);
+      text-align: center;
+      width: 100%;
+      left: 0;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: clamp(2.5rem, 10vw, 3.25rem);
+      }
+
+      .tagline {
+        letter-spacing: 0.12em;
+        font-size: 0.85rem;
+      }
+
+      footer {
+        font-size: 0.65rem;
+        letter-spacing: 0.24em;
+        bottom: 16px;
+        padding: 0 16px;
+      }
     }
   </style>
 </head>
