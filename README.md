@@ -31,10 +31,9 @@ npx wrangler d1 execute revery-waitlist-preview --remote --file=./schema.sql
 
 `--location` is a hint, not a guarantee — Cloudflare places the database in the
 nearest available location to the one you ask for. Only `eu`, `fedramp` and `us` can
-be *guaranteed*, via `--jurisdiction`, and there is no Oceania jurisdiction. So after
-creating the database, check where it actually landed (dashboard → Storage & Databases
-→ D1) and make sure section 6 of the privacy policy still matches: it says waitlist
-addresses are held in Oceania while everything else is in the United States.
+be *guaranteed*, via `--jurisdiction`, and there is no Oceania jurisdiction. The
+privacy policy names no country, so wherever it lands is fine; check the dashboard
+(Storage & Databases → D1) if you want to know.
 
 Then in the dashboard — Workers & Pages → `reveryapplanding` → Settings → Bindings —
 add a D1 binding named `DB`: `revery-waitlist` for Production, `revery-waitlist-preview`
