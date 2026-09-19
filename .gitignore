@@ -5,3 +5,8 @@
 node_modules/
 wrangler.toml
 .DS_Store
+
+# editor leftovers
+*.swp
+*.swo
+*~
