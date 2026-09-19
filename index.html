@@ -146,8 +146,6 @@
   .btn[aria-disabled=true]{ opacity:0.6; cursor:default; }
   .btn[aria-disabled=true]:hover{ background:var(--seal); }
   .form-status:focus{ outline:none; }
-  .cta-note a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
-  .cta-note a:hover{ color:var(--seal); }
   /* The widget is invisible, but its container is still a flex item and would
      add a second gap between the field and the button. While there is no iframe
      to show, take it out of flow; if the widget mode is ever switched to Managed
@@ -409,8 +407,7 @@
             <button type="submit" class="btn">Notify me at launch</button>
           </form>
           <div class="form-status" id="waitlist-status" role="status" aria-live="polite" tabindex="-1"></div>
-          <div class="cta-note">Coming soon · one email when revery launches,
-          <a href="/privacy">nothing else</a></div>
+          <div class="cta-note">Coming soon</div>
         </div>
       </div>
     </section>
@@ -514,8 +511,6 @@
             <button type="submit" class="btn">Notify me at launch</button>
           </form>
           <div class="form-status" id="waitlist-final-status" role="status" aria-live="polite" tabindex="-1"></div>
-          <div class="cta-note">One email when revery launches,
-          <a href="/privacy">nothing else</a></div>
         </div>
       </div>
     </section>
