@@ -101,6 +101,9 @@
     flex-wrap:wrap;
     justify-content:center;
   }
+  /* display:flex above beats the browser's own [hidden] rule, so retiring the
+     form on success needs saying explicitly or it stays on screen. */
+  .waitlist-form[hidden]{ display:none; }
   .waitlist-form input[type=email]{
     font-family:inherit;
     font-size:15px;
@@ -609,7 +612,11 @@
 
         // Retire the form on success so it cannot be submitted twice, moving focus
         // to the confirmation first — otherwise hiding it strands focus on <body>.
+        // Clear and unlock before hiding, so that even if the form somehow stays
+        // visible it never sits there holding a stale address and "Adding you…".
         status.textContent = "You're on the list — we'll email you the moment revery is live.";
+        form.reset();
+        lock(false);
         status.focus();
         form.hidden = true;
       } catch (err) {
