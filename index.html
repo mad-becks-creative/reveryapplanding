@@ -145,6 +145,17 @@
   .form-status:focus{ outline:none; }
   .cta-note a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
   .cta-note a:hover{ color:var(--seal); }
+  /* The widget is invisible, but its container is still a flex item and would
+     add a second gap between the field and the button. While there is no iframe
+     to show, take it out of flow; if the widget mode is ever switched to Managed
+     an iframe appears, this rule stops matching, and the checkbox lays out
+     normally. Browsers without :has() just get a slightly wider gap. */
+  .waitlist-form .turnstile:not(:has(iframe)){
+    position:absolute;
+    width:0;
+    height:0;
+    overflow:hidden;
+  }
   /* Honeypot: off-screen rather than display:none, which bots look for. */
   .decoy{
     position:absolute;
@@ -391,6 +402,7 @@
             <input type="email" name="email" placeholder="you@email.com" required aria-label="Email address" aria-describedby="waitlist-status" autocomplete="email" spellcheck="false">
             <input type="hidden" name="source" value="hero">
             <input class="decoy" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <div class="turnstile" data-widget></div>
             <button type="submit" class="btn">Notify me at launch</button>
           </form>
           <div class="form-status" id="waitlist-status" role="status" aria-live="polite" tabindex="-1"></div>
@@ -495,6 +507,7 @@
             <input type="email" name="email" placeholder="you@email.com" required aria-label="Email address" aria-describedby="waitlist-final-status" autocomplete="email" spellcheck="false">
             <input type="hidden" name="source" value="final">
             <input class="decoy" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <div class="turnstile" data-widget></div>
             <button type="submit" class="btn">Notify me at launch</button>
           </form>
           <div class="form-status" id="waitlist-final-status" role="status" aria-live="polite" tabindex="-1"></div>
@@ -520,12 +533,33 @@
   // Posts to the Pages Function in functions/api/waitlist.js — same origin, so
   // the relative path works on revery.club, the pages.dev host and previews alike.
   const WAITLIST_ENDPOINT = '/api/waitlist';
+  const TURNSTILE_SITEKEY = '0x4AAAAAAE8s4kyFDG1qOKew';
+  const CONTACT_EMAIL = 'reveryadmin@madbecks.com';
+
+  // Rendered explicitly rather than by class: there are two forms, and a bare
+  // turnstile.reset() would reset whichever widget rendered last. Each form keeps
+  // the id of its own widget so a failed attempt resets the right one.
+  window.onloadTurnstileCallback = function () {
+    document.querySelectorAll('.waitlist-form .turnstile[data-widget]').forEach(function (el) {
+      el.dataset.widgetId = window.turnstile.render(el, { sitekey: TURNSTILE_SITEKEY });
+    });
+  };
 
   document.querySelectorAll('.waitlist-form').forEach(function (form) {
     const status = form.parentElement.querySelector('.form-status');
     const button = form.querySelector('button[type=submit]');
     const buttonLabel = button.textContent;
+    const widget = form.querySelector('.turnstile[data-widget]');
     let inFlight = false;
+
+    // A Turnstile token is single use and expires after five minutes, so any
+    // failed attempt must get a fresh one — otherwise the retry sends the same
+    // dead token, fails identically, and reads as a broken site.
+    function resetChallenge() {
+      if (window.turnstile && widget && widget.dataset.widgetId) {
+        try { window.turnstile.reset(widget.dataset.widgetId); } catch (err) { /* nothing to reset */ }
+      }
+    }
 
     // aria-disabled rather than the disabled attribute: a disabled button leaves
     // the accessibility tree and takes keyboard focus down to <body> with it, so
@@ -558,7 +592,17 @@
         if (res.status === 400) {
           status.textContent = 'That email address does not look right — check it and try again.';
           lock(false);
+          resetChallenge();
           form.email.focus();
+          return;
+        }
+        if (res.status === 403 || res.status === 503) {
+          // The check runs silently, so a blocked person has nothing to click.
+          // Give them the address that is already in the footer.
+          status.textContent = "We couldn't verify your browser. Email " + CONTACT_EMAIL +
+            " and we'll add you to the list.";
+          lock(false);
+          resetChallenge();
           return;
         }
         if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -571,10 +615,13 @@
       } catch (err) {
         status.textContent = 'Something went wrong — please try again in a moment.';
         lock(false);
+        resetChallenge();
       }
     });
   });
 </script>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onloadTurnstileCallback" async defer></script>
 
 </body>
 </html>

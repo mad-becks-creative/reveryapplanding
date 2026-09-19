@@ -39,6 +39,48 @@ Then in the dashboard — Workers & Pages → `reveryapplanding` → Settings �
 add a D1 binding named `DB`: `revery-waitlist` for Production, `revery-waitlist-preview`
 for Preview. Bindings only take effect on the next deployment.
 
+### Spam protection
+
+Two layers: an off-screen honeypot field, and **Cloudflare Turnstile** in **invisible**
+mode — no widget renders for anyone. The widget was created with Turnstile Spin's CLI:
+
+```sh
+npx wrangler turnstile widget create "revery.club waitlist" \
+  --domain revery.club --domain reveryapplanding.pages.dev --mode invisible
+```
+
+The sitekey is public and lives in `index.html`. The secret is a Pages secret named
+`TURNSTILE_SECRET`, set on **both** environments (`--env preview` for the second):
+
+```sh
+npx wrangler pages secret put TURNSTILE_SECRET --project-name reveryapplanding
+npx wrangler pages secret list --project-name reveryapplanding
+```
+
+The endpoint **fails closed**: no secret returns 500, a rejected or missing token returns
+403. A misconfiguration stops signups rather than silently letting bots through, so watch
+for it after any change to secrets or deployment settings.
+
+Local development uses Turnstile's test keys instead, so `localhost` needs no registration —
+sitekey `1x00000000000000000000BB` in `index.html` and this in `.dev.vars` (gitignored):
+
+```
+TURNSTILE_SECRET="1x0000000000000000000000000000000AA"
+```
+
+Swap the secret to `2x0000000000000000000000000000000AA` to make every check fail.
+
+**If real people report being blocked**, invisible mode is turning them away and they have
+no checkbox to click. Watch for it:
+
+```sh
+npx wrangler pages deployment tail <deployment-id> --project-name reveryapplanding
+```
+
+`waitlist challenge failed` at any volume is the signal. The fix is to change the widget to
+**managed** mode in the dashboard — no code change: the CSS already lets a real checkbox lay
+out normally once Turnstile renders an iframe.
+
 ### Reading the list
 
 ```sh

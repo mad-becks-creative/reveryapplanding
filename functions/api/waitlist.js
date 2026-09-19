@@ -9,6 +9,7 @@
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_EMAIL_LENGTH = 254; // RFC 5321 practical maximum
+const SITEVERIFY = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
 function json(body, status) {
   return new Response(JSON.stringify(body), {
@@ -37,6 +38,40 @@ export async function onRequestPost(context) {
   const email = (form.get('email') || '').trim().toLowerCase();
   if (!email || email.length > MAX_EMAIL_LENGTH || !EMAIL_RE.test(email)) {
     return json({ error: 'invalid_email' }, 400);
+  }
+
+  // Turnstile, fail closed: a missing secret is our misconfiguration rather than
+  // a bad visitor, so it answers 500 and shows up in the logs as an error. It
+  // must never fall through to accepting the signup unverified.
+  if (!context.env.TURNSTILE_SECRET) {
+    console.error('TURNSTILE_SECRET is not configured');
+    return json({ error: 'server' }, 500);
+  }
+
+  const token = (form.get('cf-turnstile-response') || '').trim();
+  if (!token) {
+    return json({ error: 'challenge_failed' }, 403);
+  }
+
+  const verification = new FormData();
+  verification.append('secret', context.env.TURNSTILE_SECRET);
+  verification.append('response', token);
+  // No remoteip: the policy promises we keep no IP addresses, and Cloudflare
+  // already sees the visitor's as the host, so forwarding it buys nothing.
+
+  let verdict;
+  try {
+    const res = await fetch(SITEVERIFY, { method: 'POST', body: verification });
+    verdict = await res.json();
+  } catch (err) {
+    console.error('siteverify unreachable:', err && err.message);
+    return json({ error: 'verify_unavailable' }, 503);
+  }
+
+  if (!verdict.success) {
+    // Codes only — never the address, which would put it in the Workers logs.
+    console.log('waitlist challenge failed:', JSON.stringify(verdict['error-codes']));
+    return json({ error: 'challenge_failed' }, 403);
   }
 
   const raw = (form.get('source') || '').trim().toLowerCase();
