@@ -140,6 +140,9 @@
     color:var(--seal);
     min-height:18px;
   }
+  .btn[aria-disabled=true]{ opacity:0.6; cursor:default; }
+  .btn[aria-disabled=true]:hover{ background:var(--seal); }
+  .form-status:focus{ outline:none; }
   .cta-note a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
   .cta-note a:hover{ color:var(--seal); }
   /* Honeypot: off-screen rather than display:none, which bots look for. */
@@ -385,12 +388,12 @@
 
         <div class="cta-row">
           <form class="waitlist-form" id="waitlist">
-            <input type="email" name="email" placeholder="you@email.com" required aria-label="Email address">
+            <input type="email" name="email" placeholder="you@email.com" required aria-label="Email address" aria-describedby="waitlist-status" autocomplete="email" spellcheck="false">
             <input type="hidden" name="source" value="hero">
             <input class="decoy" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
             <button type="submit" class="btn">Notify me at launch</button>
           </form>
-          <div class="form-status" role="status" aria-live="polite"></div>
+          <div class="form-status" id="waitlist-status" role="status" aria-live="polite" tabindex="-1"></div>
           <div class="cta-note">Coming soon · one email when revery launches,
           <a href="/privacy">nothing else</a></div>
         </div>
@@ -489,12 +492,12 @@
         <h2>Start keeping the moments worth remembering.</h2>
         <div class="cta-row">
           <form class="waitlist-form" id="waitlist-final">
-            <input type="email" name="email" placeholder="you@email.com" required aria-label="Email address">
+            <input type="email" name="email" placeholder="you@email.com" required aria-label="Email address" aria-describedby="waitlist-final-status" autocomplete="email" spellcheck="false">
             <input type="hidden" name="source" value="final">
             <input class="decoy" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
             <button type="submit" class="btn">Notify me at launch</button>
           </form>
-          <div class="form-status" role="status" aria-live="polite"></div>
+          <div class="form-status" id="waitlist-final-status" role="status" aria-live="polite" tabindex="-1"></div>
           <div class="cta-note">One email when revery launches,
           <a href="/privacy">nothing else</a></div>
         </div>
@@ -522,11 +525,27 @@
     const status = form.parentElement.querySelector('.form-status');
     const button = form.querySelector('button[type=submit]');
     const buttonLabel = button.textContent;
+    let inFlight = false;
+
+    // aria-disabled rather than the disabled attribute: a disabled button leaves
+    // the accessibility tree and takes keyboard focus down to <body> with it, so
+    // the person submitting loses their place. The guard blocks the second click.
+    function lock(on) {
+      inFlight = on;
+      button.setAttribute('aria-disabled', on ? 'true' : 'false');
+      button.textContent = on ? 'Adding you…' : buttonLabel;
+    }
 
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
-      button.disabled = true;
-      button.textContent = 'Adding you…';
+      if (inFlight) return;
+
+      if (navigator.onLine === false) {
+        status.textContent = "You appear to be offline — try again once you're reconnected.";
+        return;
+      }
+
+      lock(true);
       status.textContent = '';
 
       try {
@@ -538,20 +557,20 @@
 
         if (res.status === 400) {
           status.textContent = 'That email address does not look right — check it and try again.';
-          button.disabled = false;
-          button.textContent = buttonLabel;
+          lock(false);
+          form.email.focus();
           return;
         }
         if (!res.ok) throw new Error('HTTP ' + res.status);
 
-        // Retire the form on success so it cannot be submitted twice. The status
-        // node is a live region, so the confirmation is announced, not just shown.
-        form.hidden = true;
+        // Retire the form on success so it cannot be submitted twice, moving focus
+        // to the confirmation first — otherwise hiding it strands focus on <body>.
         status.textContent = "You're on the list — we'll email you the moment revery is live.";
+        status.focus();
+        form.hidden = true;
       } catch (err) {
         status.textContent = 'Something went wrong — please try again in a moment.';
-        button.disabled = false;
-        button.textContent = buttonLabel;
+        lock(false);
       }
     });
   });

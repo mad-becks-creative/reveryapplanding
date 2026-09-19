@@ -1,11 +1,14 @@
 -- Waitlist signups from the revery.club landing page.
--- Applied with: npx wrangler d1 execute revery-waitlist --remote --file=./schema.sql
+--
+--   npx wrangler d1 execute revery-waitlist --remote --file=./schema.sql
+--
+-- Idempotent, so it is safe to re-run against local and remote.
 
 CREATE TABLE IF NOT EXISTS waitlist (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  email      TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  id         INTEGER PRIMARY KEY,
+  email      TEXT NOT NULL UNIQUE,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
   source     TEXT
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS waitlist_email ON waitlist (email);
+CREATE INDEX IF NOT EXISTS idx_waitlist_created_at ON waitlist (created_at);
