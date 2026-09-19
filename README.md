@@ -45,8 +45,9 @@ Two layers: an off-screen honeypot field, and **Cloudflare Turnstile** in **invi
 mode — no widget renders for anyone. The widget was created with Turnstile Spin's CLI:
 
 ```sh
-npx wrangler turnstile widget create "revery.club waitlist" \
-  --domain revery.club --domain reveryapplanding.pages.dev --mode invisible
+npx wrangler turnstile widget create "revery.club (Spin)" \
+  --domain revery.club --domain reveryapplanding.pages.dev \
+  --domain localhost --domain 127.0.0.1 --mode invisible
 ```
 
 The sitekey is public and lives in `index.html`. The secret is a Pages secret named
@@ -61,14 +62,25 @@ The endpoint **fails closed**: no secret returns 500, a rejected or missing toke
 403. A misconfiguration stops signups rather than silently letting bots through, so watch
 for it after any change to secrets or deployment settings.
 
-Local development uses Turnstile's test keys instead, so `localhost` needs no registration —
-sitekey `1x00000000000000000000BB` in `index.html` and this in `.dev.vars` (gitignored):
+`localhost` and `127.0.0.1` are registered hostnames on the widget, so local development
+in a **real browser** uses the real sitekey as-is. Put the real secret in `.dev.vars`
+(gitignored):
 
-```
-TURNSTILE_SECRET="1x0000000000000000000000000000000AA"
+```sh
+npx wrangler turnstile widget get 0x4AAAAAAE8tK2_JeXg6lsEC --json \
+  | python3 -c 'import json,sys;print("TURNSTILE_SECRET=\"%s\"" % json.load(sys.stdin)["secret"])' \
+  > .dev.vars
 ```
 
-Swap the secret to `2x0000000000000000000000000000000AA` to make every check fail.
+To exercise the failure paths, swap `.dev.vars` to Turnstile's always-fail test secret
+`2x0000000000000000000000000000000AA` (403), or delete the file entirely (500, fail closed).
+
+**Automated browsers cannot pass the real widget.** Invisible mode declines to issue a token
+to headless Chrome — no error, the token input just stays empty and the submit gets a 403.
+That is the feature working, not a bug, but it means any scripted end-to-end test of the
+*success* path must use Turnstile's always-pass test keys: sitekey `1x00000000000000000000BB`
+in `index.html` and secret `1x0000000000000000000000000000000AA` in `.dev.vars`. Verifying
+the success path against the real widget requires a human in a real browser.
 
 **If real people report being blocked**, invisible mode is turning them away and they have
 no checkbox to click. Watch for it:
