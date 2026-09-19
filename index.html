@@ -140,6 +140,17 @@
     color:var(--seal);
     min-height:18px;
   }
+  .cta-note a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
+  .cta-note a:hover{ color:var(--seal); }
+  /* Honeypot: off-screen rather than display:none, which bots look for. */
+  .decoy{
+    position:absolute;
+    left:-9999px;
+    width:1px;
+    height:1px;
+    opacity:0;
+    pointer-events:none;
+  }
 
   /* ---- Divider ---- */
   .divider{
@@ -375,10 +386,13 @@
         <div class="cta-row">
           <form class="waitlist-form" id="waitlist">
             <input type="email" name="email" placeholder="you@email.com" required aria-label="Email address">
+            <input type="hidden" name="source" value="hero">
+            <input class="decoy" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
             <button type="submit" class="btn">Notify me at launch</button>
           </form>
           <div class="form-status" role="status" aria-live="polite"></div>
-          <div class="cta-note">Coming soon</div>
+          <div class="cta-note">Coming soon · one email when revery launches,
+          <a href="/privacy">nothing else</a></div>
         </div>
       </div>
     </section>
@@ -476,9 +490,13 @@
         <div class="cta-row">
           <form class="waitlist-form" id="waitlist-final">
             <input type="email" name="email" placeholder="you@email.com" required aria-label="Email address">
+            <input type="hidden" name="source" value="final">
+            <input class="decoy" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
             <button type="submit" class="btn">Notify me at launch</button>
           </form>
           <div class="form-status" role="status" aria-live="polite"></div>
+          <div class="cta-note">One email when revery launches,
+          <a href="/privacy">nothing else</a></div>
         </div>
       </div>
     </section>
@@ -496,24 +514,20 @@
   </footer>
 
 <script>
-  // Waitlist endpoint is not decided yet (RW-260). Until one is set, a signup
-  // opens a pre-filled email to the admin inbox instead of silently failing.
-  const WAITLIST_ENDPOINT = '';
-  const FALLBACK_EMAIL = 'reveryadmin@madbecks.com';
+  // Posts to the Pages Function in functions/api/waitlist.js — same origin, so
+  // the relative path works on revery.club, the pages.dev host and previews alike.
+  const WAITLIST_ENDPOINT = '/api/waitlist';
 
   document.querySelectorAll('.waitlist-form').forEach(function (form) {
     const status = form.parentElement.querySelector('.form-status');
+    const button = form.querySelector('button[type=submit]');
+    const buttonLabel = button.textContent;
+
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
-      const email = form.email.value.trim();
-
-      if (!WAITLIST_ENDPOINT) {
-        const subject = encodeURIComponent('Notify me when revery launches');
-        const body = encodeURIComponent('Please add ' + email + ' to the revery waitlist.');
-        window.location.href = 'mailto:' + FALLBACK_EMAIL + '?subject=' + subject + '&body=' + body;
-        status.textContent = 'Opening your email app — just hit send.';
-        return;
-      }
+      button.disabled = true;
+      button.textContent = 'Adding you…';
+      status.textContent = '';
 
       try {
         const res = await fetch(WAITLIST_ENDPOINT, {
@@ -521,11 +535,23 @@
           headers: { 'Accept': 'application/json' },
           body: new FormData(form)
         });
-        if (!res.ok) throw new Error(res.statusText);
-        form.reset();
-        status.textContent = "Thanks — we'll let you know the moment it's live.";
+
+        if (res.status === 400) {
+          status.textContent = 'That email address does not look right — check it and try again.';
+          button.disabled = false;
+          button.textContent = buttonLabel;
+          return;
+        }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+
+        // Retire the form on success so it cannot be submitted twice. The status
+        // node is a live region, so the confirmation is announced, not just shown.
+        form.hidden = true;
+        status.textContent = "You're on the list — we'll email you the moment revery is live.";
       } catch (err) {
-        status.textContent = 'Something went wrong. Email ' + FALLBACK_EMAIL + ' instead.';
+        status.textContent = 'Something went wrong — please try again in a moment.';
+        button.disabled = false;
+        button.textContent = buttonLabel;
       }
     });
   });
