@@ -89,6 +89,58 @@
     font-size:18px;
     color:var(--ink-soft);
   }
+  /* The noun in the headline is typed and retyped through three words, so the
+     sentence can name all three places without reading as a list. */
+  .swap{
+    position:relative;
+    display:inline-block;
+    white-space:nowrap;
+  }
+  /* The width-holder: the widest of the three words, rendered invisibly but
+     still taking up its space. It is the whole fix — nothing to the right of
+     the word moves as letters are typed and deleted, because the box they are
+     typed into never changes size. visibility:hidden rather than opacity:0 so
+     it stays out of the accessibility tree as well as out of sight. Holding the
+     slot open this way rather than measuring in JS means it tracks the clamped
+     font size, every breakpoint, and the moment Cormorant finishes loading, for
+     free. It holds "memories" rather than "messages": both are eight letters,
+     but two m's beats one, and m is the widest lowercase glyph. */
+  .swap-slot{ visibility:hidden; }
+  /* The live text laid over the slot. Absolute inside the inline-block, whose
+     own height is one line box of the same font at the same size, so top:0 puts
+     this baseline exactly where the slot's already is — no drift against the
+     rest of the sentence. Being out of flow also makes the slot's width a floor
+     rather than a limit: if a word renders a few pixels wider than the slot it
+     simply overhangs into the following word-space and nothing reflows, so the
+     slot only has to be approximately the widest. */
+  .swap-live{
+    position:absolute;
+    left:0;
+    top:0;
+  }
+  .swap-word{ color:var(--seal); }
+  .swap-caret{
+    display:inline-block;
+    width:2px;
+    height:0.78em;
+    margin-left:2px;
+    vertical-align:-0.06em;
+    background:var(--seal);
+    animation:swap-caret-blink 1s step-end infinite;
+  }
+  @keyframes swap-caret-blink{ 50%{ opacity:0; } }
+  /* The same word again, off-screen the way .decoy is, and the only one of the
+     two that assistive tech reads: a screen reader landing on the heading
+     mid-erase would otherwise announce "Your memo are scattered across three
+     apps." display:none and visibility:hidden would both drop it out of the
+     accessibility tree, which is the whole point of it. */
+  .swap-label{
+    position:absolute;
+    left:-9999px;
+    width:1px;
+    height:1px;
+    opacity:0;
+  }
   .cta-row{
     display:flex;
     flex-direction:column;
@@ -380,6 +432,13 @@
 
   @media (prefers-reduced-motion: reduce){
     html{ scroll-behavior:auto; }
+    /* The script below bails out under the same query, so nothing ever types.
+       With no typing there is no reflow to prevent, so drop the caret and let
+       the word sit in the sentence at its own natural width — otherwise it
+       keeps a permanently held-open slot and a dead gap before "are". */
+    .swap-caret{ display:none; }
+    .swap-slot{ display:none; }
+    .swap-live{ position:static; }
   }
 </style>
 </head>
@@ -395,7 +454,7 @@
   <main>
     <section class="hero">
       <div class="wrap">
-        <h1>Your memories, photos and messages are scattered across three apps.<br>Nobody ever looks back at them.</h1>
+        <h1>Your <span class="swap"><span class="swap-label">memories</span><span class="swap-slot" aria-hidden="true">memories</span><span class="swap-live" aria-hidden="true"><span class="swap-word" data-swap="memories,photos,messages">memories</span><span class="swap-caret"></span></span></span> are scattered across three apps.<br>Nobody ever looks back at them.</h1>
         <p class="lede">revery is a private space for couples, families, and close friend groups to actually capture life together — and come back to it.</p>
 
         <div class="cta-row">
@@ -526,6 +585,43 @@
       </ul>
     </div>
   </footer>
+
+<script>
+  // The noun is typed and retyped through three words, so the sentence can name
+  // all three places without reading as a list. It types into a slot held open
+  // at the width of the longest word (see .swap-slot), so nothing to the right
+  // of it moves: an earlier version let the sentence reflow on every keystroke,
+  // and it was that sliding — not the typing — that read as restless.
+  (function () {
+    const word = document.querySelector('[data-swap]');
+    if (!word) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const words = word.dataset.swap.split(',');
+    const HOLD = 2800;  // reading pause on a finished word
+    const ERASE = 55;   // per character, deleting
+    const PAUSE = 500;  // beat on the empty slot, before the next word
+    const TYPE = 120;   // per character, typing
+
+    let i = 0, n = words[0].length, erasing = true;
+
+    function tick() {
+      if (erasing) {
+        word.textContent = words[i].slice(0, --n);
+        if (n > 0) return setTimeout(tick, ERASE);
+        erasing = false;
+        i = (i + 1) % words.length;
+        return setTimeout(tick, PAUSE);
+      }
+      word.textContent = words[i].slice(0, ++n);
+      if (n < words[i].length) return setTimeout(tick, TYPE);
+      erasing = true;
+      setTimeout(tick, HOLD);
+    }
+
+    setTimeout(tick, HOLD);
+  })();
+</script>
 
 <script>
   // Posts to the Pages Function in functions/api/waitlist.js — same origin, so
