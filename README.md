@@ -9,8 +9,9 @@ index.html                              landing page
 privacy/, terms/, legal.css             legal pages
 _headers                                content type for the file below
 .well-known/apple-app-site-association  universal links — the iOS app depends on this
-_routes.json                            confines Functions to /api/*
+_routes.json                            confines Functions to /api/* and /@*
 functions/api/waitlist.js               POST /api/waitlist — waitlist signups
+functions/[handle].js                   GET /@<handle> — profile-link page for people without the app
 schema.sql                              the D1 table behind it
 ```
 

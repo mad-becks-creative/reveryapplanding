@@ -4,7 +4,8 @@
       {
         "appIDs": ["5SK3M6FYSQ.com.madbecks.revery"],
         "components": [
-          { "/": "/join", "comment": "Invite links: /join?token=<base32>" }
+          { "/": "/join", "comment": "Invite links: /join?token=<base32>" },
+          { "/": "/@*", "comment": "Profile links: /@<handle>" }
         ]
       }
     ]
