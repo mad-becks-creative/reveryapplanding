@@ -6,45 +6,76 @@
 <title>revery — a private journal you keep together</title>
 <meta name="description" content="revery is an end-to-end encrypted journal you keep alone or with the people in your life. Capture your days, invite the people who were there, and come back to it together.">
 <link rel="canonical" href="https://revery.club/">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="color-scheme" content="light dark">
+<link rel="preload" href="/fonts/SpaceGrotesk-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  /* Revery Design System: tokens.json, light and dark (Charcoal) themes. The
+     theme follows the device; there is no toggle. */
+  @font-face{
+    font-family:'Space Grotesk';
+    src:url('/fonts/SpaceGrotesk-SemiBold.woff2') format('woff2');
+    font-weight:600;
+    font-style:normal;
+    font-display:swap;
+  }
   :root{
-    --parchment: #F3EEE1;
-    --parchment-deep: #E9E1CC;
-    --paper: #FBF8EF;
-    --ink: #2B241C;
-    --ink-soft: #5C5142;
-    --seal: #7A3B33;
-    --seal-deep: #5E2C26;
-    --line: rgba(43,36,28,0.14);
+    color-scheme:light dark;
+    --bg:#FFFFFF;
+    --surface:#FFFFFF;
+    --surface-muted:#F7F8F7;
+    --border:#E4E7E4;
+    --border-strong:#CBD2CE;
+    --text-primary:#16211D;
+    --text-secondary:#5B6B65;
+    --accent:#0F6E56;
+    --accent-hover:#0B5744;
+    --accent-soft:#E1F5EE;
+    --accent-contrast:#FFFFFF;
+    --danger:#C0392B;
+    --shadow-card:0 1px 2px rgba(22,33,29,0.04), 0 4px 16px rgba(22,33,29,0.06);
+    --radius-md:10px;
+    --radius-xl:16px;
+    --radius-full:999px;
+    --font-display:'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-sans:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#111213;
+      --surface:#1A1B1D;
+      --surface-muted:#222326;
+      --border:#2E3033;
+      --border-strong:#3A3D41;
+      --text-primary:#ECEDEE;
+      --text-secondary:#A9ACB0;
+      --accent:#5DCAA5;
+      --accent-hover:#78D6B4;
+      --accent-soft:#16352D;
+      --accent-contrast:#04231C;
+      --danger:#E8897E;
+      --shadow-card:0 1px 2px rgba(0,0,0,0.2), 0 4px 20px rgba(0,0,0,0.28);
+    }
   }
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth; -webkit-text-size-adjust:100%;}
   body{
     margin:0;
-    background:var(--parchment);
-    color:var(--ink);
-    font-family:'Work Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background:var(--bg);
+    color:var(--text-primary);
+    font-family:var(--font-sans);
     line-height:1.6;
     -webkit-font-smoothing:antialiased;
   }
-  h1,h2,h3,.serif{
-    font-family:'Cormorant Garamond', Georgia, serif;
-    font-weight:500;
-    color:var(--ink);
-    letter-spacing:0.01em;
+  h1,h2,h3,.display{
+    font-family:var(--font-display);
+    font-weight:600;
+    color:var(--text-primary);
+    letter-spacing:-0.01em;
   }
   .wrap{
     max-width:1040px;
     margin:0 auto;
     padding:0 28px;
-  }
-  .paper-texture{
-    background-image:
-      radial-gradient(circle at 15% 30%, rgba(43,36,28,0.025) 0, transparent 45%),
-      radial-gradient(circle at 85% 70%, rgba(43,36,28,0.025) 0, transparent 45%);
   }
 
   /* ---- Header ---- */
@@ -58,18 +89,18 @@
     flex-wrap:wrap;
     gap:6px 20px;
   }
+  /* There is no logo yet: the design system sets the name in the type. */
   .wordmark{
-    font-family:'Cormorant Garamond', Georgia, serif;
-    font-size:24px;
+    font-family:var(--font-display);
+    font-size:22px;
     font-weight:600;
-    letter-spacing:0.02em;
-    color:var(--ink);
+    letter-spacing:-0.01em;
+    color:var(--text-primary);
     text-decoration:none;
   }
   .tagline-small{
     font-size:13px;
-    color:var(--ink-soft);
-    letter-spacing:0.03em;
+    color:var(--text-secondary);
   }
 
   /* ---- Hero ---- */
@@ -78,8 +109,9 @@
     text-align:center;
   }
   .hero h1{
-    font-size:clamp(38px, 6vw, 64px);
+    font-size:clamp(34px, 5.4vw, 56px);
     line-height:1.12;
+    letter-spacing:-0.02em;
     max-width:880px;
     margin:0 auto 26px;
   }
@@ -87,7 +119,7 @@
     max-width:520px;
     margin:0 auto 40px;
     font-size:18px;
-    color:var(--ink-soft);
+    color:var(--text-secondary);
   }
   /* The noun in the headline is typed and retyped through three words, so the
      sentence can name all three places without reading as a list. */
@@ -102,9 +134,10 @@
      typed into never changes size. visibility:hidden rather than opacity:0 so
      it stays out of the accessibility tree as well as out of sight. Holding the
      slot open this way rather than measuring in JS means it tracks the clamped
-     font size, every breakpoint, and the moment Cormorant finishes loading, for
-     free. It holds "memories" rather than "messages": both are eight letters,
-     but two m's beats one, and m is the widest lowercase glyph. */
+     font size, every breakpoint, and the moment Space Grotesk finishes loading,
+     for free. It holds "messages" rather than "memories": both are eight
+     letters, but in Space Grotesk s, a and g are wider than o, r and i, and that
+     outweighs the second m. */
   .swap-slot{ visibility:hidden; }
   /* The live text laid over the slot. Absolute inside the inline-block, whose
      own height is one line box of the same font at the same size, so top:0 puts
@@ -118,14 +151,14 @@
     left:0;
     top:0;
   }
-  .swap-word{ color:var(--seal); }
+  .swap-word{ color:var(--accent); }
   .swap-caret{
     display:inline-block;
     width:2px;
     height:0.78em;
     margin-left:2px;
     vertical-align:-0.06em;
-    background:var(--seal);
+    background:var(--accent);
     animation:swap-caret-blink 1s step-end infinite;
   }
   @keyframes swap-caret-blink{ 50%{ opacity:0; } }
@@ -159,44 +192,54 @@
   .waitlist-form input[type=email]{
     font-family:inherit;
     font-size:15px;
-    padding:14px 18px;
-    border:1px solid var(--line);
-    border-radius:3px;
-    background:var(--paper);
-    color:var(--ink);
+    height:48px;
+    padding:0 16px;
+    border:1px solid var(--border-strong);
+    border-radius:var(--radius-md);
+    background:var(--surface);
+    color:var(--text-primary);
     width:280px;
     max-width:100%;
+    transition:border-color 0.12s ease, box-shadow 0.12s ease;
   }
+  .waitlist-form input[type=email]::placeholder{ color:var(--text-secondary); }
+  /* The system's focus glow alone (accent-soft) is too faint to find the field
+     by; the accent border carries the contrast and the glow sits around it. */
   .waitlist-form input[type=email]:focus{
-    outline:2px solid var(--seal);
-    outline-offset:1px;
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft);
   }
   .btn{
     font-family:inherit;
     font-size:15px;
     font-weight:500;
-    padding:14px 28px;
-    border-radius:3px;
-    border:1px solid var(--seal);
-    background:var(--seal);
-    color:var(--paper);
+    height:48px;
+    padding:0 24px;
+    border-radius:var(--radius-md);
+    border:none;
+    background:var(--accent);
+    color:var(--accent-contrast);
     cursor:pointer;
-    transition:background 0.15s ease;
+    transition:background 0.12s ease;
   }
-  .btn:hover{ background:var(--seal-deep); }
-  .btn:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+  .btn:hover{ background:var(--accent-hover); }
+  .btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
   .cta-note{
     font-size:13px;
-    color:var(--ink-soft);
-    letter-spacing:0.04em;
+    font-weight:500;
+    color:var(--accent);
+    background:var(--accent-soft);
+    border-radius:var(--radius-full);
+    padding:3px 12px;
   }
   .form-status{
-    font-size:13px;
-    color:var(--seal);
-    min-height:18px;
+    font-size:14px;
+    color:var(--text-primary);
+    min-height:20px;
   }
   .btn[aria-disabled=true]{ opacity:0.6; cursor:default; }
-  .btn[aria-disabled=true]:hover{ background:var(--seal); }
+  .btn[aria-disabled=true]:hover{ background:var(--accent); }
   .form-status:focus{ outline:none; }
   /* The widget is invisible, but its container is still a flex item and would
      add a second gap between the field and the button. While there is no iframe
@@ -219,21 +262,12 @@
     pointer-events:none;
   }
 
-  /* ---- Divider ---- */
-  .divider{
-    height:1px;
-    background:var(--line);
-    margin:0 auto;
-    max-width:1040px;
-  }
-
   /* ---- Section shared ---- */
   section{ padding:88px 0; }
   .eyebrow-line{
-    font-size:15px;
-    color:var(--seal);
-    font-style:italic;
-    font-family:'Cormorant Garamond', Georgia, serif;
+    font-size:13px;
+    font-weight:500;
+    color:var(--accent);
     margin-bottom:10px;
   }
   .section-head{
@@ -241,38 +275,41 @@
     margin-bottom:52px;
   }
   .section-head h2{
-    font-size:clamp(28px, 4vw, 38px);
+    font-size:clamp(26px, 3.6vw, 36px);
     margin:0 0 14px;
     line-height:1.2;
   }
   .section-head p{
-    color:var(--ink-soft);
+    color:var(--text-secondary);
     font-size:17px;
     max-width:480px;
+  }
+
+  /* ---- Cards: the system's one card shape ---- */
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-xl);
+    box-shadow:var(--shadow-card);
   }
 
   /* ---- What it is: two column ---- */
   .split{
     display:grid;
     grid-template-columns:1fr 1fr;
-    border:1px solid var(--line);
-    border-radius:4px;
-    overflow:hidden;
+    gap:20px;
   }
   .split-col{
-    padding:40px 36px;
-    background:var(--paper);
-  }
-  .split-col + .split-col{
-    border-left:1px solid var(--line);
+    padding:36px 32px;
   }
   .split-col .kicker{
-    font-family:'Cormorant Garamond', Georgia, serif;
-    font-size:26px;
-    margin:0 0 12px;
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:22px;
+    margin:0 0 10px;
   }
   .split-col p{
-    color:var(--ink-soft);
+    color:var(--text-secondary);
     font-size:15.5px;
     margin:0;
   }
@@ -283,24 +320,34 @@
     grid-template-columns:repeat(3, 1fr);
     gap:44px;
   }
-  .step{
-    border-top:2px solid var(--seal);
-    padding-top:18px;
+  .step-num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:32px;
+    height:32px;
+    margin-bottom:16px;
+    border-radius:var(--radius-full);
+    background:var(--accent-soft);
+    color:var(--accent);
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:15px;
   }
   .step h3{
-    font-size:22px;
+    font-size:20px;
     margin:0 0 10px;
   }
   .step p{
-    color:var(--ink-soft);
+    color:var(--text-secondary);
     font-size:15px;
     margin:0;
   }
 
   /* ---- Trust ---- */
   .trust{
-    background:var(--parchment-deep);
-    border-radius:4px;
+    background:var(--surface-muted);
+    border-radius:var(--radius-xl);
     padding:56px 48px;
     display:grid;
     grid-template-columns:1.1fr 1fr;
@@ -308,12 +355,12 @@
     align-items:center;
   }
   .trust h2{
-    font-size:clamp(26px,3.5vw,34px);
+    font-size:clamp(24px,3.2vw,32px);
     margin:0 0 16px;
     line-height:1.2;
   }
   .trust p{
-    color:var(--ink-soft);
+    color:var(--text-secondary);
     font-size:16px;
     margin:0 0 12px;
   }
@@ -329,42 +376,37 @@
     padding-left:22px;
     position:relative;
     font-size:15px;
-    color:var(--ink);
+    color:var(--text-secondary);
   }
   .trust-list li::before{
     content:'';
     position:absolute;
     left:0;
     top:8px;
-    width:7px;
-    height:7px;
+    width:8px;
+    height:8px;
     border-radius:50%;
-    background:var(--seal);
+    background:var(--accent);
   }
-  .trust-list strong{ display:block; font-size:16px; font-weight:500; margin-bottom:3px; }
+  .trust-list strong{ display:block; font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:3px; }
 
   /* ---- Who it's for ---- */
   .personas{
     display:grid;
     grid-template-columns:repeat(3,1fr);
-    gap:1px;
-    background:var(--line);
-    border:1px solid var(--line);
-    border-radius:4px;
-    overflow:hidden;
+    gap:20px;
   }
   .persona{
-    background:var(--paper);
-    padding:34px 30px;
+    padding:30px 28px;
   }
-  .persona .serif{
-    font-size:21px;
+  .persona .display{
+    font-size:19px;
     display:block;
     margin-bottom:8px;
   }
   .persona p{
     font-size:14.5px;
-    color:var(--ink-soft);
+    color:var(--text-secondary);
     margin:0;
   }
 
@@ -374,7 +416,8 @@
     padding:100px 0 90px;
   }
   .final-cta h2{
-    font-size:clamp(32px, 5vw, 48px);
+    font-size:clamp(28px, 4.6vw, 44px);
+    letter-spacing:-0.02em;
     max-width:640px;
     margin:0 auto 30px;
     line-height:1.18;
@@ -382,7 +425,7 @@
 
   /* ---- Footer ---- */
   footer{
-    border-top:1px solid var(--line);
+    border-top:1px solid var(--border);
     padding:34px 0;
   }
   footer .wrap{
@@ -394,10 +437,10 @@
   }
   footer .fine{
     font-size:13px;
-    color:var(--ink-soft);
+    color:var(--text-secondary);
   }
   footer .fine .wordmark{
-    font-size:18px;
+    font-size:17px;
     margin-right:8px;
   }
   .footer-links{
@@ -409,14 +452,13 @@
   }
   .footer-links a{
     font-size:13px;
-    color:var(--ink-soft);
+    color:var(--text-secondary);
     text-decoration:none;
   }
-  .footer-links a:hover{ color:var(--seal); text-decoration:underline; }
+  .footer-links a:hover{ color:var(--accent); text-decoration:underline; }
 
   @media (max-width:760px){
     .split{ grid-template-columns:1fr; }
-    .split-col + .split-col{ border-left:none; border-top:1px solid var(--line); }
     .steps{ grid-template-columns:1fr; gap:34px; }
     .trust{ grid-template-columns:1fr; padding:40px 26px; }
     .personas{ grid-template-columns:1fr; }
@@ -442,7 +484,7 @@
   }
 </style>
 </head>
-<body class="paper-texture">
+<body>
 
   <header>
     <div class="wrap">
@@ -454,7 +496,7 @@
   <main>
     <section class="hero">
       <div class="wrap">
-        <h1>Your <span class="swap"><span class="swap-label">memories</span><span class="swap-slot" aria-hidden="true">memories</span><span class="swap-live" aria-hidden="true"><span class="swap-word" data-swap="memories,photos,messages">memories</span><span class="swap-caret"></span></span></span> are scattered across three apps.<br>Nobody ever looks back at them.</h1>
+        <h1>Your <span class="swap"><span class="swap-label">memories</span><span class="swap-slot" aria-hidden="true">messages</span><span class="swap-live" aria-hidden="true"><span class="swap-word" data-swap="memories,photos,messages">memories</span><span class="swap-caret"></span></span></span> are scattered across three apps.<br>Nobody ever looks back at them.</h1>
         <p class="lede">revery is a private space for couples, families, and close friend groups to actually capture life together — and come back to it.</p>
 
         <div class="cta-row">
@@ -471,8 +513,6 @@
       </div>
     </section>
 
-    <div class="divider"></div>
-
     <section id="what">
       <div class="wrap">
         <div class="section-head">
@@ -481,11 +521,11 @@
           <p>Every entry in revery is one of two things — and you choose which, every time.</p>
         </div>
         <div class="split">
-          <div class="split-col">
+          <div class="split-col card">
             <div class="kicker">Solo</div>
             <p>Private, for your eyes only. The thoughts you're still working out, the moment you want to remember exactly as it felt — nobody sees it unless you decide to.</p>
           </div>
-          <div class="split-col">
+          <div class="split-col card">
             <div class="kicker">Shared</div>
             <p>Written together. Invite the people who were there, and everyone can add their own side of the same memory — so it's never just one person's version.</p>
           </div>
@@ -501,22 +541,23 @@
         </div>
         <div class="steps">
           <div class="step">
+            <div class="step-num" aria-hidden="true">1</div>
             <h3>Capture</h3>
             <p>Write a moment alone, or bring in the people who were part of it. Takes less time than opening your camera roll.</p>
           </div>
           <div class="step">
+            <div class="step-num" aria-hidden="true">2</div>
             <h3>Organize</h3>
             <p>See your memories however makes sense — scroll through them in a feed, or lay them across the year on a calendar. Filter to just yours, just shared, or everything at once.</p>
           </div>
           <div class="step">
+            <div class="step-num" aria-hidden="true">3</div>
             <h3>Look back, together</h3>
             <p>The point isn't just writing it down. revery hands back what you wrote a year ago, or five, on this day — so you open it again, together.</p>
           </div>
         </div>
       </div>
     </section>
-
-    <div class="divider"></div>
 
     <section id="trust">
       <div class="wrap">
@@ -542,16 +583,16 @@
           <h2>Built for the people who matter most.</h2>
         </div>
         <div class="personas">
-          <div class="persona">
-            <span class="serif">New parents</span>
+          <div class="persona card">
+            <span class="display">New parents</span>
             <p>The days blur together fast. Catch the small stuff before it disappears.</p>
           </div>
-          <div class="persona">
-            <span class="serif">Couples</span>
+          <div class="persona card">
+            <span class="display">Couples</span>
             <p>More than a camera roll — a running record of your life together, in both your words.</p>
           </div>
-          <div class="persona">
-            <span class="serif">Friend groups</span>
+          <div class="persona card">
+            <span class="display">Friend groups</span>
             <p>Keep the good stuff somewhere it won't scroll away into a group chat.</p>
           </div>
         </div>
