@@ -7,6 +7,7 @@ Hosted on Cloudflare Pages (project `reveryapplanding`), Git-connected:
 ```
 index.html                              landing page
 privacy/, terms/, legal.css             legal pages
+fonts/                                  Space Grotesk SemiBold (OFL), from the Revery Design System
 _headers                                content type for the file below
 .well-known/apple-app-site-association  universal links — the iOS app depends on this
 _routes.json                            confines Functions to /api/* and /@*
